@@ -40,15 +40,12 @@
 			});
 		});
 
-		var stationCount=0;
-
 		function makeGeoJSON(csvData) {
 			csv2geojson.csv2geojson(csvData, {
 				latfield: 'Lat',
 				lonfield: 'Lon',
 				delimiter: ','
 			}, function(err, data) {
-				stationCount++;
 
 				map.on('load', function () {
 					map.addLayer({
@@ -63,8 +60,10 @@
 						// },
 						'paint': {
 							"circle-radius":{
-								'base': 20,
-								'stops': [[6, 3], [22,180]]
+								'property': 'line',
+								'type': 'categorical',
+								'base': 1.75,
+								'stops': [[6, 2], [22,180]]
 							},
 							"circle-color": "#1DC5B3" ,
 						}
@@ -72,19 +71,6 @@
 				});    
 			});
 		}
-
-		console.log(stationCount);
-
-
-
-
-
-
-
-
-
-
-
 
 	</script>
 </body>
