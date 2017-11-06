@@ -11,8 +11,10 @@
 
 	<script src="https://ajax.googleapis.com/ajax/libs/jquery/2.2.0/jquery.min.js"></script>
 
-	<script src='csv2geojson.js'></script>
-
+	<script src='JS/csv2geojson.js'></script>
+	<script src='JS/moment.js'></script>
+	<script src='JS/utility.js'></script>
+	<script src='JS/jquery.csv.js'></script>
 	<title>TEST</title>
 
 </head>
@@ -30,15 +32,25 @@
 		});
 
 		// map.scrollZoom.disable();
-
-		$(document).ready(function() {
+		var stationData={}
+		stationData = (function() {
+			var stationData = null;
 			$.ajax({
+				'async': false,
+				// 'global': false,
 				type: "GET",
 				url: 'data/toll_stations.csv',
 				dataType: "text",
-				success: function(csvData) {makeGeoJSON(csvData);}
+				success: function(csvData) {
+					// console.log("csv",csvData);
+					stationData=csvData;
+					makeGeoJSON(csvData);
+				}
 			});
-		});
+			return  stationData;
+		})();
+
+		stationData= $.csv.toObjects(stationData);
 
 		function makeGeoJSON(csvData) {
 			csv2geojson.csv2geojson(csvData, {
@@ -46,8 +58,8 @@
 				lonfield: 'Lon',
 				delimiter: ','
 			}, function(err, data) {
-
 				map.on('load', function () {
+					// console.log(data);
 					map.addLayer({
 						'id': 'station',
 						'type': 'circle',
@@ -55,9 +67,6 @@
 							'type': 'geojson',
 							'data': data
 						},
-						// 'layout': {
-						// 	"icon-image": "marker-15"
-						// },
 						'paint': {
 							"circle-radius":{
 								'property': 'line',
@@ -65,11 +74,112 @@
 								'base': 1.75,
 								'stops': [[6, 2], [22,180]]
 							},
-							"circle-color": "#1DC5B3" ,
-						}
+							"circle-color": "#1DC5B3",
+						},
+						"filter": ["==","$type", "Point"],
 					});
 				});    
 			});
+		}
+
+		// console.log(stationData[0]);
+
+		$(document).ready(function(){
+			$.ajax({
+				type: "GET",
+				url: 'data/data_sample.csv',
+				dataType: "text",
+				success: function(csvData){
+					csvData= processFile(csvData);
+					// csvData= $.csv.fromArrays(csvData);
+					makeJSON(csvData);
+				}
+			})
+		});
+
+		function processFile(csvData){
+			var allTextLines = csvData.split(/\r\n|\n/);
+			var headers = allTextLines[0].split(',');
+			var lines =[];
+
+			for (var i=1; i<allTextLines.length; i++) {
+				var data = allTextLines[i].split(',');
+				if (data.length == headers.length) {
+					var enter_roadId;
+					var enter_stationId;
+					var exit_roadId;
+					var exit_stationId;
+
+					var tarr = [];
+					for (var j=0; j<headers.length; j++) {
+						if(j==0){
+							enter_roadId=data[j];
+						}
+						if(j==1){
+							enter_stationId=data[j];
+						}
+						if(j==3){
+							exit_roadId=data[j];
+						}
+						if(j==4){
+							exit_stationId=data[j];
+						}
+
+						tarr.push(headers[j]+":"+data[j]);
+					}
+
+					var enter_station_lat = getLat(enter_roadId, enter_stationId, stationData);
+					var enter_station_lon = getLon(enter_roadId, enter_stationId, stationData);
+					var exit_station_lat = getLat(exit_roadId, exit_stationId, stationData);
+					var exit_station_lon = getLon(exit_roadId, exit_stationId, stationData);
+
+
+					tarr.push("Station_enter_Lat"+":"+ enter_station_lat);
+					tarr.push("Station_enter_Lon"+":"+ enter_station_lon);
+					tarr.push("Station_exit_Lat"+":"+ exit_station_lat);
+					tarr.push("Station_exit_Lon"+":"+ exit_station_lon);
+					lines.push(tarr);
+				}
+			}
+			// console.log(lines);
+			return lines;
+		}
+
+		function makeJSON(csvData){
+			csv2geojson.csv2geojson(csvData,{
+				latfield: 'Station_enter_Lat',
+				lonfield: 'Station_enter_Lon',
+				delimiter: ','
+			}, function (err, data){
+				if(err){
+					console.log("there is an error");
+				}else{
+					console.log("successfully converted to geojson file");
+				}
+				map.on('load', function(){
+					map.addLayer({
+						'id':'route',
+						'type': 'circle',
+						'source': {
+							'type': 'geojson',
+							'data': data
+						},
+						'paint':{
+							'circle-radius':{
+								'property':'line',
+								'type': 'categorical',
+								'base': 1.75,
+								'stops': [[6, 2], [22,180]],
+							},
+							'circle-color': "#f44842",
+						},
+						"filter": ["==","$type", "Point"],
+
+
+					})
+					console.log("done adding second layer");
+				});
+			})
 		}
 
 	</script>
