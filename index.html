@@ -32,9 +32,11 @@
 		});
 
 		// map.scrollZoom.disable();
-		var stationData={}
-		stationData = (function() {
-			var stationData = null;
+		var stationData_CSV={}
+		var stationData_GEOJSON=null;
+
+		stationData_CSV = (function() {
+			var stationData_CSV = null;
 			$.ajax({
 				'async': false,
 				// 'global': false,
@@ -43,21 +45,24 @@
 				dataType: "text",
 				success: function(csvData) {
 					// console.log("csv",csvData);
-					stationData=csvData;
+					stationData_CSV=csvData;
 					makeGeoJSON(csvData);
 				}
 			});
-			return  stationData;
+			return  stationData_CSV;
 		})();
 
-		stationData= $.csv.toObjects(stationData);
+		stationData_CSV= $.csv.toObjects(stationData_CSV);
 
 		function makeGeoJSON(csvData) {
+			// console.log("first csv", csvData);
 			csv2geojson.csv2geojson(csvData, {
 				latfield: 'Lat',
 				lonfield: 'Lon',
 				delimiter: ','
 			}, function(err, data) {
+				stationData_GEOJSON=data;
+
 				map.on('load', function () {
 					// console.log(data);
 					map.addLayer({
@@ -82,102 +87,45 @@
 			});
 		}
 
-		// console.log(stationData[0]);
+		// console.log("geojson",stationData_GEOJSON);
+
+		// console.log(stationData_CSV[0]);
 
 		$(document).ready(function(){
 			$.ajax({
 				type: "GET",
-				url: 'data/data_sample.csv',
+				url: 'data/route_sorted.csv',
 				dataType: "text",
 				success: function(csvData){
-					csvData= processFile(csvData);
-					// csvData= $.csv.fromArrays(csvData);
 					makeJSON(csvData);
 				}
 			})
 		});
 
-		function processFile(csvData){
-			var allTextLines = csvData.split(/\r\n|\n/);
-			var headers = allTextLines[0].split(',');
-			var lines =[];
-
-			for (var i=1; i<allTextLines.length; i++) {
-				var data = allTextLines[i].split(',');
-				if (data.length == headers.length) {
-					var enter_roadId;
-					var enter_stationId;
-					var exit_roadId;
-					var exit_stationId;
-
-					var tarr = [];
-					for (var j=0; j<headers.length; j++) {
-						if(j==0){
-							enter_roadId=data[j];
-						}
-						if(j==1){
-							enter_stationId=data[j];
-						}
-						if(j==3){
-							exit_roadId=data[j];
-						}
-						if(j==4){
-							exit_stationId=data[j];
-						}
-
-						tarr.push(headers[j]+":"+data[j]);
-					}
-
-					var enter_station_lat = getLat(enter_roadId, enter_stationId, stationData);
-					var enter_station_lon = getLon(enter_roadId, enter_stationId, stationData);
-					var exit_station_lat = getLat(exit_roadId, exit_stationId, stationData);
-					var exit_station_lon = getLon(exit_roadId, exit_stationId, stationData);
-
-
-					tarr.push("Station_enter_Lat"+":"+ enter_station_lat);
-					tarr.push("Station_enter_Lon"+":"+ enter_station_lon);
-					tarr.push("Station_exit_Lat"+":"+ exit_station_lat);
-					tarr.push("Station_exit_Lon"+":"+ exit_station_lon);
-					lines.push(tarr);
-				}
-			}
-			// console.log(lines);
-			return lines;
-		}
-
 		function makeJSON(csvData){
 			csv2geojson.csv2geojson(csvData,{
-				latfield: 'Station_enter_Lat',
-				lonfield: 'Station_enter_Lon',
+				latfield: 'enter_lat',
+				lonfield: 'enter_lon',
 				delimiter: ','
 			}, function (err, data){
-				if(err){
-					console.log("there is an error");
-				}else{
-					console.log("successfully converted to geojson file");
-				}
+				
 				map.on('load', function(){
+					data= csv2geojson.toLine(data);
+
+					console.log("data", data);
 					map.addLayer({
 						'id':'route',
-						'type': 'circle',
+						'type': 'line',
 						'source': {
 							'type': 'geojson',
 							'data': data
 						},
 						'paint':{
-							'circle-radius':{
-								'property':'line',
-								'type': 'categorical',
-								'base': 1.75,
-								'stops': [[6, 2], [22,180]],
-							},
-							'circle-color': "#f44842",
+							'line-width': 1.5,
+							"line-color":"#ff9933",
 						},
-						"filter": ["==","$type", "Point"],
-
 
 					})
-					console.log("done adding second layer");
 				});
 			})
 		}
