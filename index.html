@@ -136,6 +136,25 @@
 				featurecollection.features.push(line);
 			}
 			
+
+			var geojson = {
+				"type": "FeatureCollection",
+				"features": [{
+					"type": "Feature",
+					"geometry": {
+						"type": "LineString",
+						"coordinates": [
+						[0,0]
+						]
+					}
+				}]
+			};
+
+			var speedFactor=30;
+			var startTime=0;
+			var progress=0;
+			var count=0;
+
 			map.on('load', function(){
 				
 				map.addLayer({
@@ -143,15 +162,28 @@
 					'type': 'line',
 					'source': {
 						'type': 'geojson',
-						'data': featurecollection
+						'data': geojson,
 					},
 					'paint':{
 						'line-width': 1.5,
 						"line-color":"#ff9933",
 					},
-
 				})
+				
+				startTime= performance.now();
+				console.log(startTime);
+				animateLine();
+
 			});
+
+			function animateLine(timestamp){
+				console.log("called");
+				progress=timestamp-startTime;
+				geojson.features.push(featurecollection.features[count]);
+				count++;
+				map.getSource('route').setData(geojson);
+				animation=requestAnimationFrame(animateLine);
+			}
 		}
 
 	</script>
