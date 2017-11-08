@@ -103,7 +103,7 @@
 			var enter_lon;
 			var exit_lat;
 			var exit_lon;
-			console.log(fields);
+			// console.log(fields);
 
 			for(var i=10;i<fields.length; i=i+10){
 
@@ -150,7 +150,7 @@
 				}]
 			};
 
-			var speedFactor=30;
+			var speedFactor=300;
 			var startTime=0;
 			var progress=0;
 			var count=0;
@@ -171,7 +171,7 @@
 				})
 				
 				startTime= performance.now();
-				console.log(startTime);
+				// console.log(startTime);
 				animateLine();
 
 			});
@@ -179,10 +179,17 @@
 			function animateLine(timestamp){
 				// console.log("called");
 				progress=timestamp-startTime;
+				// console.log(featurecollection.features[count]);
+				geojson.features.shift();
 				geojson.features.push(featurecollection.features[count]);
 				count++;
 				map.getSource('route').setData(geojson);
-				animation=requestAnimationFrame(animateLine);
+				if(count<featurecollection.features.length){
+					animation=requestAnimationFrame(animateLine);	
+				}else{
+					console.log("Done");
+					return;
+				}
 			}
 		}
 
