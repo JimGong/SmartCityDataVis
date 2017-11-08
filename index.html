@@ -123,13 +123,14 @@
 				};
 				// console.log(i, fields[i+4]);
 				enter_lat=parseFloat(fields[i+4]);
-				enter_lon=parseFloat(fields[i+4]);
+				enter_lon=parseFloat(fields[i+5]);
 				exit_lat=parseFloat(fields[i+6]);
 				exit_lon=parseFloat(fields[i+7]);
 
 				line.geometry.coordinates.push([enter_lon,enter_lat]);
 				line.geometry.coordinates.push([exit_lon,exit_lat]);
 				featurecollection.features.push(line);
+				// break;
 			}
 			console.log(featurecollection);
 			
