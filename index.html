@@ -31,9 +31,8 @@
 			zoom: 6,
 		});
 
-		// map.scrollZoom.disable();
-		var stationData_CSV={}
-		var stationData_GEOJSON=null;
+		var stationData_CSV = {}
+		var stationData_GEOJSON = null;
 
 		stationData_CSV = (function() {
 			var stationData_CSV = null;
@@ -45,26 +44,24 @@
 				dataType: "text",
 				success: function(csvData) {
 					// console.log("csv",csvData);
-					stationData_CSV=csvData;
+					stationData_CSV = csvData;
 					makeGeoJSON(csvData);
 				}
 			});
 			return  stationData_CSV;
 		})();
 
-		stationData_CSV= $.csv.toObjects(stationData_CSV);
+		stationData_CSV = $.csv.toObjects(stationData_CSV);
 
 		function makeGeoJSON(csvData) {
-			// console.log("first csv", csvData);
 			csv2geojson.csv2geojson(csvData, {
 				latfield: 'Lat',
 				lonfield: 'Lon',
 				delimiter: ','
 			}, function(err, data) {
-				stationData_GEOJSON=data;
+				stationData_GEOJSON = data;
 
 				map.on('load', function () {
-					// console.log(data);
 					map.addLayer({
 						'id': 'station',
 						'type': 'circle',
@@ -86,10 +83,6 @@
 				});    
 			});
 		}
-
-		// console.log("geojson",stationData_GEOJSON);
-
-		// console.log(stationData_CSV[0]);
 
 		$(document).ready(function(){
 			$.ajax({
@@ -121,27 +114,28 @@
 						coordinates: []
 					}
 				};
-				// console.log(i, fields[i+4]);
-				enter_lat=parseFloat(fields[i+4]);
-				enter_lon=parseFloat(fields[i+5]);
-				exit_lat=parseFloat(fields[i+6]);
-				exit_lon=parseFloat(fields[i+7]);
+				enter_lat = parseFloat(fields[i+4]);
+				enter_lon = parseFloat(fields[i+5]);
+				exit_lat = parseFloat(fields[i+6]);
+				exit_lon = parseFloat(fields[i+7]);
 
+				if(enter_lat<0){
+					enter_lat=null;
+				};
+				if(enter_lon<0){
+					enter_lon=null;
+				};
+				if(exit_lat<0){
+					exit_lat=null;
+				};
+				if(exit_lon<0){
+					exit_lon=null;
+				};
 				line.geometry.coordinates.push([enter_lon,enter_lat]);
 				line.geometry.coordinates.push([exit_lon,exit_lat]);
 				featurecollection.features.push(line);
-				// break;
 			}
-			console.log(featurecollection);
 			
-			// console.log(csvData[0]);
-			
-
-			// line.geometry.coordinates.push([1, 2])
-			// line.geometry.coordinates.push([3, 4])
-			// featurecollection.features.push(line)
-			
-
 			map.on('load', function(){
 				
 				map.addLayer({
@@ -158,37 +152,6 @@
 
 				})
 			});
-			// csv2geojson.csv2geojson(csvData,{
-			// 	enter_latfield: 'enter_lat',
-			// 	enter_lonfiled: 'enter_lon',
-			// 	exit_latfield: 'exit_lat',
-			// 	exit_lonfiled: 'exit_lon',
-
-			// 	delimiter: ','
-			// }, function (err, data){
-				
-			// 	map.on('load', function(){
-			// 		var featurecollection = { type: 'FeatureCollection', features: [] };
-
-
-			// 		// data= csv2geojson.toLine(data);
-
-			// 		// console.log("data", data);
-			// 		// map.addLayer({
-			// 		// 	'id':'route',
-			// 		// 	'type': 'line',
-			// 		// 	'source': {
-			// 		// 		'type': 'geojson',
-			// 		// 		'data': data
-			// 		// 	},
-			// 		// 	'paint':{
-			// 		// 		'line-width': 1.5,
-			// 		// 		"line-color":"#ff9933",
-			// 		// 	},
-
-			// 		// })
-			// 	});
-			// })
 		}
 
 	</script>
