@@ -147,7 +147,7 @@
 						[0,0]
 						]
 					}
-				}]
+				}],
 			};
 
 			var speedFactor=300;
@@ -165,7 +165,7 @@
 						'data': geojson,
 					},
 					'paint':{
-						'line-width': 1.5,
+						'line-width': 5.5,
 						"line-color":"#ff9933",
 					},
 				})
@@ -176,20 +176,66 @@
 
 			});
 
+			var speedFactor = 30; 
+
 			function animateLine(timestamp){
 				// console.log("called");
-				progress=timestamp-startTime;
+				// progress=timestamp-startTime;
 				// console.log(featurecollection.features[count]);
+
+				// console.log(featurecollection.features[count]);
+				var startPoint=featurecollection.features[count].geometry.coordinates[0];
+
+				var endPoint= featurecollection.features[count].geometry.coordinates[1];
+
+				// console.log(startPoint, endPoint);
+
+				var interval=(endPoint[0]-startPoint[0])/speedFactor;
+				// console.log(geojson);
+				geojson.features[0].geometry.coordinates=[];
+				/* this is the old version 
 				geojson.features.shift();
 				geojson.features.push(featurecollection.features[count]);
-				count++;
 				map.getSource('route').setData(geojson);
-				if(count<featurecollection.features.length){
-					animation=requestAnimationFrame(animateLine);	
-				}else{
-					console.log("Done");
-					return;
+				*/
+
+				var times=0;
+				var slop = (startPoint[1]-endPoint[1])/(startPoint[0]-endPoint[0]);
+				var b = startPoint[1] - slop*startPoint[0];
+
+				function getY(x){
+					var y= slop*(x)+b;
+					return y;
 				}
+
+				function simpleFunc(){
+					var x=startPoint[0]+ times*interval; 
+					var y=getY(x);
+					console.log(times,  [x,y]);
+					geojson.features[0].geometry.coordinates.push([x,y]);
+					map.getSource('route').setData(geojson);
+					times++;
+
+					if(times>30){
+						clearInterval(t);
+
+						if(count<featurecollection.features.length){
+							animation=requestAnimationFrame(animateLine);	
+						}else{
+							console.log("Done");
+							count=0;
+							// animateLine();
+							return;
+						}
+					}
+				}
+
+				var t= setInterval(simpleFunc, 100);
+
+				count++;
+				geojson.features[0].geometry.coordinates=[];
+
+
 			}
 		}
 
